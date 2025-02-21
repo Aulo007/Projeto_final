@@ -4,15 +4,9 @@
 #include "pico/stdlib.h"
 
 // Definições dos pinos de LED
-#define LED1_R 16
-#define LED1_G 17
-#define LED1_B 18
-#define LED2_R 19
-#define LED2_G 20
-#define LED2_B 21
-#define LED3_R 22
-#define LED3_G 26
-#define LED3_B 27
+#define LED_GREEN_PIN 11
+#define LED_BLUE_PIN 12
+#define LED_RED_PIN 13
 
 // Inicialização dos LEDs
 void led_init(void);
