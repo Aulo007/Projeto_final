@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(main main.c BIBLIOTECAS/buzzer.c BIBLIOTECAS/desenho.c BIBLIOTECAS/joystick.c BIBLIOTECAS/leds.c BIBLIOTECAS/matrizRGB.c BIBLIOTECAS/menu.c BIBLIOTECAS/ssd1306.c)
+add_executable(main main.c BIBLIOTECAS/buzzer.c BIBLIOTECAS/desenho.c BIBLIOTECAS/leds.c BIBLIOTECAS/matrizRGB.c BIBLIOTECAS/menu.c BIBLIOTECAS/ssd1306.c)
 
 pico_set_program_name(main "main")
 pico_set_program_version(main "0.1")
@@ -64,7 +64,6 @@ target_link_libraries(main
     hardware_pio
     hardware_clocks
     hardware_gpio
-
 )
 
 pico_add_extra_outputs(main)
