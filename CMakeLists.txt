@@ -40,6 +40,8 @@ add_executable(main main.c )
 pico_set_program_name(main "main")
 pico_set_program_version(main "0.1")
 
+pico_generate_pio_header(main ${CMAKE_CURRENT_LIST_DIR}/ws2818b.pio)
+
 # Modify the below lines to enable/disable output over UART/USB
 pico_enable_stdio_uart(main 0)
 pico_enable_stdio_usb(main 0)
@@ -55,8 +57,15 @@ target_include_directories(main PRIVATE
 
 # Add any user requested libraries
 target_link_libraries(main 
-        
-        )
+    pico_stdlib
+    hardware_adc
+    hardware_pwm
+    hardware_i2c
+    hardware_pio
+    hardware_clocks
+    hardware_gpio
+
+)
 
 pico_add_extra_outputs(main)
 
