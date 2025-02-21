@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(main main.c BIBLIOTECAS/buzzer.c BIBLIOTECAS/desenho.c BIBLIOTECAS/leds.c BIBLIOTECAS/matrizRGB.c BIBLIOTECAS/menu.c BIBLIOTECAS/ssd1306.c)
+add_executable(main main.c BIBLIOTECAS/bitmaps.c BIBLIOTECAS/buzzer.c BIBLIOTECAS/desenho.c BIBLIOTECAS/leds.c BIBLIOTECAS/matrizRGB.c BIBLIOTECAS/menu.c BIBLIOTECAS/ssd1306.c)
 
 pico_set_program_name(main "main")
 pico_set_program_version(main "0.1")
@@ -43,8 +43,8 @@ pico_set_program_version(main "0.1")
 pico_generate_pio_header(main ${CMAKE_CURRENT_LIST_DIR}/ws2818b.pio)
 
 # Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(main 0)
-pico_enable_stdio_usb(main 0)
+pico_enable_stdio_uart(main 1)
+pico_enable_stdio_usb(main 1)
 
 # Add the standard library to the build
 target_link_libraries(main
