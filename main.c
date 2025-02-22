@@ -36,6 +36,7 @@ static volatile uint8_t border_style = 0;
 static volatile bool calibracao_loading = false;
 static volatile bool calibracao_realizada = false;
 static volatile uint32_t last_button_time = 0;
+static volatile uint32_t last_calibration_time = 0;
 static volatile int Eletromiografia_calibrado = 0;                  // Valor médio calibrado do microfone
 static volatile int Sensor_de_Respiracao_calibrado = 0;             // Valor médio calibrado do joystick (eixo X)
 static volatile int Sensor_de_Qualidade_do_Ar_calibrado = 0;        // Valor médio calibrado do joystick (eixo Y)
@@ -43,7 +44,8 @@ static volatile int Eletromiografia_calibrado_desvio = 0;           // Desvio  c
 static volatile int Sensor_de_Respiracao_calibrado_desvio = 0;      // Desvio calibrado do joystick (eixo X)
 static volatile int Sensor_de_Qualidade_do_Ar_calibrado_desvio = 0; // Desvio médio calibrado do joystick (eixo Y)
 
-const uint32_t DEBOUNCE_DELAY = 200000; // 200ms em microssegundos
+const uint32_t DEBOUNCE_DELAY = 200000;            // 200ms em microssegundos
+const uint32_t ANIMATION_UPDATE_INTERVAL = 400000; // 400ms em microssegundos
 
 // Variáveis para leitura do ADC
 uint16_t adc_value_x;
@@ -93,20 +95,18 @@ int main(void)
     // Limpa o SSD1306 e exibe mensagem de "sem calibrar"
     ssd1306_fill(&ssd, false);
     ssd1306_send_data(&ssd);
-    ssd1306_fill(&ssd, false);
     ssd1306_draw_bitmap(&ssd, 0, 0, mensagem_sem_calibrar, 128, 64);
     ssd1306_send_data(&ssd);
 
     // Configura as interrupções para os botões
     gpio_set_irq_enabled_with_callback(BUTTON_A, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handle);
-    gpio_set_irq_enabled_with_callback(BUTTON_B, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handle);
+    gpio_set_irq_enabled(BUTTON_B, GPIO_IRQ_EDGE_FALL, true);
+    gpio_set_irq_enabled(SW_PIN, GPIO_IRQ_EDGE_FALL, true); // Adiciona interrupção para o botão do joystick
 
     while (true)
     {
         /*
          * Leitura dos sensores fora do modo de calibração:
-         * (Note que os valores lidos aqui podem ser usados para outras funções,
-         * mas durante a calibração, eles serão atualizados novamente dentro do loop)
          */
         adc_select_input(0);
         adc_value_y = adc_read();
@@ -122,32 +122,52 @@ int main(void)
         {
             // Variáveis locais para acumular os valores e os quadrados
             int contador_calibracao = 0;
-            unsigned long long soma_mic = 0;
-            unsigned long long soma_mic_sq = 0;
-            unsigned long long soma_adc_x = 0;
-            unsigned long long soma_adc_x_sq = 0;
-            unsigned long long soma_adc_y = 0;
-            unsigned long long soma_adc_y_sq = 0;
+            int contador_calibracao_imagens = 0;
+            uint64_t soma_mic = 0;
+            uint64_t soma_mic_sq = 0;
+            uint64_t soma_adc_x = 0;
+            uint64_t soma_adc_x_sq = 0;
+            uint64_t soma_adc_y = 0;
+            uint64_t soma_adc_y_sq = 0;
+            uint32_t current_calibration_us;
+
+            last_calibration_time = to_us_since_boot(get_absolute_time());
 
             do
             {
-                // Releia os valores dos sensores para cada amostra
-                adc_select_input(0);
-                adc_value_y = adc_read();
-                adc_select_input(1);
-                adc_value_x = adc_read();
+                // Atualiza as leituras dentro do loop de calibração
                 adc_select_input(2);
                 mic_value = adc_read();
 
+                adc_select_input(1);
+                adc_value_x = adc_read();
+
+                adc_select_input(0);
+                adc_value_y = adc_read();
+
                 // Acumula os valores e os quadrados para os cálculos estatísticos
                 soma_mic += mic_value;
-                soma_mic_sq += (unsigned long long)mic_value * mic_value;
+                soma_mic_sq += (uint64_t)mic_value * mic_value;
                 soma_adc_x += adc_value_x;
-                soma_adc_x_sq += (unsigned long long)adc_value_x * adc_value_x;
+                soma_adc_x_sq += (uint64_t)adc_value_x * adc_value_x;
                 soma_adc_y += adc_value_y;
-                soma_adc_y_sq += (unsigned long long)adc_value_y * adc_value_y;
+                soma_adc_y_sq += (uint64_t)adc_value_y * adc_value_y;
+
+                // Atualiza o tempo atual dentro do loop
+                current_calibration_us = to_us_since_boot(get_absolute_time());
+
+                if ((current_calibration_us - last_calibration_time > ANIMATION_UPDATE_INTERVAL) && contador_calibracao_imagens < 13) // 360 ms
+                {
+                    ssd1306_fill(&ssd, false);
+                    ssd1306_send_data(&ssd);
+                    ssd1306_draw_bitmap(&ssd, 0, 0, calibration_animation[contador_calibracao_imagens], 128, 64);
+                    ssd1306_send_data(&ssd);
+                    last_calibration_time = current_calibration_us;
+                    contador_calibracao_imagens++;
+                }
 
                 contador_calibracao++;
+
                 sleep_us(50); // Coleta uma amostra a cada 50 µs.
             } while (contador_calibracao < 100000); // 100.000 amostras
 
@@ -157,28 +177,47 @@ int main(void)
             Sensor_de_Qualidade_do_Ar_calibrado = soma_adc_y / contador_calibracao;
 
             // Cálculo da variância (usando divisão inteira)
-            int var_mic = (soma_mic_sq / contador_calibracao) - (Eletromiografia_calibrado * Eletromiografia_calibrado);
-            int var_adc_x = (soma_adc_x_sq / contador_calibracao) - (Sensor_de_Respiracao_calibrado * Sensor_de_Respiracao_calibrado);
-            int var_adc_y = (soma_adc_y_sq / contador_calibracao) - (Sensor_de_Qualidade_do_Ar_calibrado * Sensor_de_Qualidade_do_Ar_calibrado);
+            uint32_t var_mic = (soma_mic_sq / contador_calibracao) - ((uint64_t)Eletromiografia_calibrado * Eletromiografia_calibrado);
+            uint32_t var_adc_x = (soma_adc_x_sq / contador_calibracao) - ((uint64_t)Sensor_de_Respiracao_calibrado * Sensor_de_Respiracao_calibrado);
+            uint32_t var_adc_y = (soma_adc_y_sq / contador_calibracao) - ((uint64_t)Sensor_de_Qualidade_do_Ar_calibrado * Sensor_de_Qualidade_do_Ar_calibrado);
 
-            // Cálculo do desvio padrão (convertido para inteiro)
-            int Eletromiografia_calibrado_desvio = (int)sqrt(var_mic);
-            int Sensor_de_Respiracao_calibrado_desvio = (int)sqrt(var_adc_x);
-            int Sensor_de_Qualidade_do_Ar_calibrado_desvio = (int)sqrt(var_adc_y);
+            // Cálculo do desvio padrão (atualiza as variáveis globais)
+            Eletromiografia_calibrado_desvio = (int)sqrt(var_mic);
+            Sensor_de_Respiracao_calibrado_desvio = (int)sqrt(var_adc_x);
+            Sensor_de_Qualidade_do_Ar_calibrado_desvio = (int)sqrt(var_adc_y);
 
             calibracao_realizada = true;
             calibracao_loading = false; // Finaliza a calibração para não repetir
 
-            // Exibe os resultados da calibração
+            // Exibe os resultados da calibração no terminal
             printf("Valor do mic calibrado: Média = %d, Desvio = %d\n", Eletromiografia_calibrado, Eletromiografia_calibrado_desvio);
             printf("Valor da respiração calibrado: Média = %d, Desvio = %d\n", Sensor_de_Respiracao_calibrado, Sensor_de_Respiracao_calibrado_desvio);
             printf("Valor da qualidade do ar calibrado: Média = %d, Desvio = %d\n", Sensor_de_Qualidade_do_Ar_calibrado, Sensor_de_Qualidade_do_Ar_calibrado_desvio);
+
+            sleep_us(ANIMATION_UPDATE_INTERVAL / 2);
+
+            ssd1306_fill(&ssd, false);
+            ssd1306_send_data(&ssd);
+            ssd1306_draw_bitmap(&ssd, 0, 0, calibracao_pronta, 128, 64);
+            ssd1306_send_data(&ssd);
+
+            sleep_us(ANIMATION_UPDATE_INTERVAL / 2);
         }
 
-        // Caso a calibração esteja em andamento e já tenha sido realizada, aguarda um tempo
+        // Exemplo de uso dos valores calibrados (fora do modo de calibração)
         if (calibracao_realizada)
         {
-            sleep_ms(200);
+            // Aqui você pode implementar o código que utiliza os valores calibrados
+            // Por exemplo, comparando as leituras atuais com os valores de referência:
+
+            // Exemplo: verificar se o valor do microfone está fora do intervalo calibrado
+            if (mic_value > Eletromiografia_calibrado + 3 * Eletromiografia_calibrado_desvio)
+            {
+                // Valor acima do normal, pode indicar um evento significativo
+                // Implemente sua lógica aqui
+            }
+
+            sleep_ms(100); // Pequeno delay para não sobrecarregar o sistema
         }
     }
 }
@@ -191,22 +230,29 @@ static void gpio_irq_handle(uint gpio, uint32_t events)
     if (current_time_us - last_button_time > DEBOUNCE_DELAY)
     {
         last_button_time = current_time_us;
+
         if (gpio == BUTTON_A)
         {
-            printf("oi\n");
+            printf("Botão A pressionado\n");
+            // Implemente sua lógica para o botão A aqui
         }
         else if (gpio == BUTTON_B)
         {
             if (calibracao_realizada == true)
             {
-                printf("oi\n");
+                printf("Recalibração solicitada\n");
+                // Lógica para recalibração, se necessário
             }
             else
             {
-                ssd1306_fill(&ssd, false);
-                ssd1306_send_data(&ssd);
+                printf("Iniciando calibração...\n");
                 calibracao_loading = true;
             }
+        }
+        else if (gpio == SW_PIN)
+        {
+            printf("Botão do joystick pressionado\n");
+            // Implemente sua lógica para o botão do joystick aqui
         }
     }
 }
