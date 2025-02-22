@@ -74,6 +74,9 @@ int main(void)
     gpio_init(BUTTON_A);
     gpio_init(BUTTON_B);
 
+    // Inicializar o Buzzer
+    buzzer_init();
+
     // Configurando os pinos dos botões como entrada com pull-up
     gpio_set_dir(SW_PIN, GPIO_IN);
     gpio_set_dir(BUTTON_A, GPIO_IN);
@@ -220,23 +223,31 @@ int main(void)
                 Sensor_de_Respiracao_calibrado_desvio,
                 Sensor_de_Qualidade_do_Ar_calibrado_desvio);
 
-            printf("\nTensão Muscular:\n");
-            printf("Nível: %.1f%%\n", dados.tensao_muscular.nivel);
-            printf("Estado: %s\n", dados.tensao_muscular.categoria);
-            printf("Recomendação: %s\n", dados.tensao_muscular.recomendacao);
+            // printf("\nTensão Muscular:\n");
+            // printf("Nível: %.1f%%\n", dados.tensao_muscular.nivel);
+            // printf("Estado: %s\n", dados.tensao_muscular.categoria);
+            // printf("Recomendação: %s\n", dados.tensao_muscular.recomendacao);
 
-            printf("\nRespiração:\n");
-            printf("Frequência: %.1f resp/min\n", dados.respiracao.freq);
-            printf("Estado: %s\n", dados.respiracao.categoria);
-            printf("Recomendação: %s\n", dados.respiracao.recomendacao);
+            // printf("\nRespiração:\n");
+            // printf("Frequência: %.1f resp/min\n", dados.respiracao.freq);
+            // printf("Estado: %s\n", dados.respiracao.categoria);
+            // printf("Recomendação: %s\n", dados.respiracao.recomendacao);
 
-            printf("\nQualidade do Ar:\n");
-            printf("AQI: %d\n", dados.qualidade_ar.aqi);
-            printf("Estado: %s\n", dados.qualidade_ar.categoria);
-            printf("Recomendação: %s\n", dados.qualidade_ar.recomendacao);
+            // printf("\nQualidade do Ar:\n");
+            // printf("AQI: %d\n", dados.qualidade_ar.aqi);
+            // printf("Estado: %s\n", dados.qualidade_ar.categoria);
+            // printf("Recomendação: %s\n", dados.qualidade_ar.recomendacao);
 
-            // Use estes valores para atualizar o display OLED e controlar o buzzer
+            printf("Mic: %d", mic_value);
 
+            // Para o microfone
+            buzzer_control(Eletromiografia_calibrado, Eletromiografia_calibrado_desvio, mic_value, MICROFONE_PIN);
+
+            // Para o joystick X
+            buzzer_control(Sensor_de_Respiracao_calibrado, Sensor_de_Respiracao_calibrado_desvio, adc_value_x, VRX_PIN);
+
+            // Para o joystick Y
+            buzzer_control(Sensor_de_Qualidade_do_Ar_calibrado, Sensor_de_Qualidade_do_Ar_calibrado_desvio, adc_value_y, VRY_PIN);
             sleep_ms(300); // Pequeno delay para não sobrecarregar o sistema
         }
     }
