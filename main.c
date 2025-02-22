@@ -248,7 +248,7 @@ int main(void)
 
             // Para o joystick Y
             buzzer_control(Sensor_de_Qualidade_do_Ar_calibrado, Sensor_de_Qualidade_do_Ar_calibrado_desvio, adc_value_y, VRY_PIN);
-            sleep_ms(300); // Pequeno delay para não sobrecarregar o sistema
+            sleep_us(125);
         }
     }
 }
