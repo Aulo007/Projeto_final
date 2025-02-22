@@ -11,6 +11,7 @@
 #include "BIBLIOTECAS/matrizRGB.h"
 #include "BIBLIOTECAS/menu.h"
 #include "BIBLIOTECAS/bitmaps.h"
+#include "BIBLIOTECAS/conversor.h"
 
 // Definindo pinos do joystick
 static const uint32_t VRY_PIN = 27;
@@ -207,17 +208,36 @@ int main(void)
         // Exemplo de uso dos valores calibrados (fora do modo de calibração)
         if (calibracao_realizada)
         {
-            // Aqui você pode implementar o código que utiliza os valores calibrados
-            // Por exemplo, comparando as leituras atuais com os valores de referência:
+            // Converte todas as leituras de uma vez
+            DadosSensores dados = converter_leituras(
+                mic_value,   // EMG
+                adc_value_x, // Respiração
+                adc_value_y, // Qualidade do ar
+                Eletromiografia_calibrado,
+                Sensor_de_Respiracao_calibrado,
+                Sensor_de_Qualidade_do_Ar_calibrado,
+                Eletromiografia_calibrado_desvio,
+                Sensor_de_Respiracao_calibrado_desvio,
+                Sensor_de_Qualidade_do_Ar_calibrado_desvio);
 
-            // Exemplo: verificar se o valor do microfone está fora do intervalo calibrado
-            if (mic_value > Eletromiografia_calibrado + 3 * Eletromiografia_calibrado_desvio)
-            {
-                // Valor acima do normal, pode indicar um evento significativo
-                // Implemente sua lógica aqui
-            }
+            printf("\nTensão Muscular:\n");
+            printf("Nível: %.1f%%\n", dados.tensao_muscular.nivel);
+            printf("Estado: %s\n", dados.tensao_muscular.categoria);
+            printf("Recomendação: %s\n", dados.tensao_muscular.recomendacao);
 
-            sleep_ms(100); // Pequeno delay para não sobrecarregar o sistema
+            printf("\nRespiração:\n");
+            printf("Frequência: %.1f resp/min\n", dados.respiracao.freq);
+            printf("Estado: %s\n", dados.respiracao.categoria);
+            printf("Recomendação: %s\n", dados.respiracao.recomendacao);
+
+            printf("\nQualidade do Ar:\n");
+            printf("AQI: %d\n", dados.qualidade_ar.aqi);
+            printf("Estado: %s\n", dados.qualidade_ar.categoria);
+            printf("Recomendação: %s\n", dados.qualidade_ar.recomendacao);
+
+            // Use estes valores para atualizar o display OLED e controlar o buzzer
+
+            sleep_ms(300); // Pequeno delay para não sobrecarregar o sistema
         }
     }
 }
