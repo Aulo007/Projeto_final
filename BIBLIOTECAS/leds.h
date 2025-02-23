@@ -5,14 +5,19 @@
 
 // Definições dos pinos de LED
 #define LED_GREEN_PIN 11
-#define LED_BLUE_PIN 12
 #define LED_RED_PIN 13
+
+// Definições de estados
+#define ESTADO_ESTAVEL 1
+#define ESTADO_INSTAVEL 2
 
 // Inicialização dos LEDs
 void led_init(void);
 
-void sequential_led(void);
+// Controle dos LEDs baseado no estado e intensidade
+void update_leds(int estado_atual, float intensidade);
 
-// Adicione mais funções aqui
+// Desliga todos os LEDs
+void turn_off_leds(void);
 
 #endif // LED_CONTROL_H

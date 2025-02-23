@@ -39,6 +39,7 @@
     "files.associations": {
         "ConversorHexadecimal_RGB.C": "cpp",
         "i2c.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "type_traits": "c"
     }
 }

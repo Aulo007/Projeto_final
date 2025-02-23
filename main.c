@@ -261,6 +261,22 @@ int main(void)
 
             if (current_calibration_sucessful_us - last_running_time >= ANIMATION_UPDATE_INTERVAL)
             {
+
+                // Calcula a intensidade baseada nos desvios dos sensores
+                float intensidade = 0.0f;
+                if (estado_atual == 2)
+                { // Estado instável
+                    // Calcula a média dos desvios normalizados
+                    float desvio_emg = abs(Eletromiografia_calibrado - mic_value) / (float)Eletromiografia_calibrado_desvio;
+                    float desvio_resp = abs(Sensor_de_Respiracao_calibrado - adc_value_x) / (float)Sensor_de_Respiracao_calibrado_desvio;
+                    float desvio_ar = abs(Sensor_de_Qualidade_do_Ar_calibrado - adc_value_y) / (float)Sensor_de_Qualidade_do_Ar_calibrado_desvio;
+
+                    intensidade = (desvio_emg + desvio_resp + desvio_ar) / 3.0f;
+                }
+
+                // Atualiza os LEDs
+                update_leds(estado_atual, intensidade);
+
                 bool condicoes_estaveis = emg_condicao && respiracao_condicao && qualidade_ar_condicao;
 
                 // Criar buffers para as strings
