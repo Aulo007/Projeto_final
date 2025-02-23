@@ -1,5 +1,6 @@
 #include "leds.h"
 #include "hardware/pwm.h"
+#include <stdio.h>
 
 // Configuração do PWM
 static uint slice_num_red;
@@ -33,12 +34,14 @@ void update_leds(int estado_atual, float intensidade)
     else if (estado_atual == ESTADO_INSTAVEL)
     {
         // Calcula a intensidade do LED vermelho (0-255)
-        uint16_t pwm_value = (uint16_t)(intensidade * 50 * 255.0f);
+        uint16_t pwm_value = (uint16_t)(intensidade * 255.0f / 35.0f);
         if (pwm_value > 255)
             pwm_value = 255;
 
+        // printf("Intensidade: %f\n", intensidade);  // Parte para debbugar o código
+        // printf("PMW VALUE: %d", pwm_value);
         // Atualiza o PWM do LED vermelho
-        pwm_set_gpio_level(LED_RED_PIN, 255);
+        pwm_set_gpio_level(LED_RED_PIN, pwm_value);
     }
 }
 
