@@ -7,7 +7,7 @@
 #define LED_COUNT 25 // Número de Leds na matriz 5x5
 
 // Buffer de pixels global
-static npLED_t leds[LED_COUNT];
+npLED_t leds[LED_COUNT];
 static PIO np_pio;
 static uint sm;
 
@@ -76,7 +76,6 @@ void npWrite()
 }
 
 // Função para desligar os leds
-
 void npClear()
 {
     for (uint i = 0; i < LED_COUNT; ++i)

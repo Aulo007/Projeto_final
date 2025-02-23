@@ -13,6 +13,7 @@
 #include "BIBLIOTECAS/menu.h"
 #include "BIBLIOTECAS/bitmaps.h"
 #include "BIBLIOTECAS/conversor.h"
+#include "BIBLIOTECAS/snake.h"
 
 // Definindo pinos do joystick
 static const uint32_t VRY_PIN = 27;
@@ -50,6 +51,9 @@ static volatile int Sensor_de_Respiracao_calibrado_desvio = 0;      // Desvio ca
 static volatile int Sensor_de_Qualidade_do_Ar_calibrado_desvio = 0; // Desvio médio calibrado do joystick (eixo Y)
 static volatile int estado_atual = 0;                               // 0 = indefinido, 1 = estável, 2 = instável
 static volatile int contador_confirmacao = 0;
+static volatile bool jogo_da_cobra = false;
+static SnakeGame snake_game;
+
 #define CONFIRMACAO_NECESSARIA 3 // Número de leituras consecutivas para confirmar mudança
 #define EMG_FATOR_DESVIO 1.0f
 #define RESP_FATOR_DESVIO 3.0f
@@ -113,15 +117,22 @@ int main(void)
     npInit(7);
 
     // Limpa o SSD1306 e exibe mensagem de "sem calibrar"
+
+    // Configura as interrupções para os botões
+    gpio_set_irq_enabled_with_callback(BUTTON_A, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handle);
+    gpio_set_irq_enabled_with_callback(BUTTON_B, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handle);
+    gpio_set_irq_enabled_with_callback(SW_PIN, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handle); // Adiciona interrupção para o botão do joystick
+
+    srand(time_us_32()); // Inicializa gerador aleatório
+
+    sleep_ms(1000); // Aguarda 1 segundo
+
+    npClear();
+    // Limpa o SSD1306 e exibe mensagem de "sem calibrar"
     ssd1306_fill(&ssd, false);
     ssd1306_send_data(&ssd);
     ssd1306_draw_bitmap(&ssd, 0, 0, mensagem_sem_calibrar, 128, 64);
     ssd1306_send_data(&ssd);
-
-    // Configura as interrupções para os botões
-    gpio_set_irq_enabled_with_callback(BUTTON_A, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handle);
-    gpio_set_irq_enabled(BUTTON_B, GPIO_IRQ_EDGE_FALL, true);
-    gpio_set_irq_enabled(SW_PIN, GPIO_IRQ_EDGE_FALL, true); // Adiciona interrupção para o botão do joystick
 
     while (true)
     {
@@ -225,7 +236,7 @@ int main(void)
         }
 
         // Exemplo de uso dos valores calibrados (fora do modo de calibração)
-        if (calibracao_realizada)
+        if (calibracao_realizada == true && jogo_da_cobra == false && calibracao_loading == false)
         {
 
             uint32_t current_calibration_sucessful_us;
@@ -380,6 +391,59 @@ int main(void)
             buzzer_control(Sensor_de_Qualidade_do_Ar_calibrado, Sensor_de_Qualidade_do_Ar_calibrado_desvio, adc_value_y, VRY_PIN);
             sleep_us(125);
         }
+        
+        
+        if (calibracao_realizada == true && jogo_da_cobra == true && calibracao_loading == false) // Implementação do jogo da cobrinha
+        {
+            static uint32_t last_update = 0;
+            uint32_t now = to_ms_since_boot(get_absolute_time());
+
+            if (now - last_update > SNAKE_SPEED_MS)
+            {
+                last_update = now;
+
+                // Direção do joystick (corrigido para snake_game)
+                Direction dir = snake_game.current_dir;
+                int threshold = 1500; // Ajuste conforme necessidade
+
+                if (adc_value_x < 2048 - threshold)
+                {
+                    dir = DIR_LEFT;
+                }
+                else if (adc_value_x > 2048 + threshold)
+                {
+                    dir = DIR_RIGHT;
+                }
+                // Inverte o eixo Y
+                else if (adc_value_y > 2048 + threshold)
+                { // DOWN
+                    dir = DIR_UP;
+                }
+                else if (adc_value_y < 2048 - threshold)
+                { // UP
+                    dir = DIR_DOWN;
+                }
+
+                snake_update(&snake_game, dir);
+                snake_draw(&snake_game);
+
+                // Atualização do display
+                ssd1306_fill(&ssd, false);
+                ssd1306_draw_string(&ssd, "Score:", 32, 16);
+
+                char score_str[16];
+                snprintf(score_str, sizeof(score_str), "%d", snake_game.score);
+                ssd1306_draw_string(&ssd, score_str, 32, 32);
+
+                if (snake_game.game_over)
+                {
+                    ssd1306_draw_string(&ssd, "GAME OVER!", 16, 48);
+                }
+
+                ssd1306_send_data(&ssd); // Envia o buffer para o display
+            }
+            sleep_ms(10);
+        }
     }
 }
 
@@ -395,14 +459,37 @@ static void gpio_irq_handle(uint gpio, uint32_t events)
         if (gpio == BUTTON_A)
         {
             printf("Botão A pressionado\n");
-            // Implemente sua lógica para o botão A aqui
+
+            if (calibracao_realizada == true)
+            {
+                jogo_da_cobra = !jogo_da_cobra;
+
+                if (jogo_da_cobra)
+                {
+                    snake_init(&snake_game);
+                    ssd1306_fill(&ssd, false);
+                    ssd1306_draw_string(&ssd, "Snake Game", 32, 32);
+                    ssd1306_send_data(&ssd);
+                }
+
+                else
+                {
+                    printf("Saindo do modo jogo da cobra\n");
+                    npClear();
+                }
+            }
         }
         else if (gpio == BUTTON_B)
         {
             if (calibracao_realizada == true)
             {
                 printf("Recalibração solicitada\n");
-                // Lógica para recalibração, se necessário
+                calibracao_loading = true;
+                jogo_da_cobra = false;
+                calibracao_realizada = false;
+                npClear();
+                turn_off_leds();
+
             }
             else
             {
@@ -413,7 +500,8 @@ static void gpio_irq_handle(uint gpio, uint32_t events)
         else if (gpio == SW_PIN)
         {
             printf("Botão do joystick pressionado\n");
-            // Implemente sua lógica para o botão do joystick aqui
+            snake_reset_score(&snake_game);
+            snake_init(&snake_game);
         }
     }
 }
