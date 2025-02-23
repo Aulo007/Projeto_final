@@ -109,6 +109,9 @@ int main(void)
     // Inicializa os LEDs
     led_init();
 
+    // Inicializa Matriz 5x5 no pino 7
+    npInit(7);
+
     // Limpa o SSD1306 e exibe mensagem de "sem calibrar"
     ssd1306_fill(&ssd, false);
     ssd1306_send_data(&ssd);
@@ -347,6 +350,7 @@ int main(void)
                     ssd1306_draw_string(&ssd, aqi_str, 89, 22);
                     ssd1306_send_data(&ssd);
                     contador_imagens_estaveis = (contador_imagens_estaveis + 1) % 3;
+                    setMatrizDeLEDSComIntensidade(verde[0], 0.05, 0.05, 0.05);
                 }
                 else if (estado_atual == 2)
                 {
@@ -358,6 +362,7 @@ int main(void)
                     ssd1306_draw_string(&ssd, aqi_str, 89, 22);
                     ssd1306_send_data(&ssd);
                     contador_imagens_instaveis = (contador_imagens_instaveis + 1) % 3;
+                    setMatrizDeLEDSComIntensidade(vermelho[0], 0.05, 0.05, 0.05);
                 }
 
                 last_running_time = current_calibration_sucessful_us;

@@ -11,6 +11,7 @@ static npLED_t leds[LED_COUNT];
 static PIO np_pio;
 static uint sm;
 
+// Inicialização da Matrix 5x5, na bitdoglab no pino 7
 void npInit(uint8_t pin)
 {
     // Cria programa PIO.
