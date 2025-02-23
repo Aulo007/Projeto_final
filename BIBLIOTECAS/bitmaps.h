@@ -21,4 +21,18 @@ extern const int calibration_animation_LEN;
 extern const unsigned char *calibration_animation[13];
 extern const unsigned char calibracao_pronta[];
 
+extern const unsigned char imagens_para_valores_estaveis_24[];
+extern const unsigned char imagens_para_valores_estaveis_25[];
+extern const unsigned char imagens_para_valores_estaveis_26[];
+extern const unsigned char imagens_para_valores_estaveis_27[];
+extern const unsigned char imagens_para_valores_instaveis_28[];
+extern const unsigned char imagens_para_valores_instaveis_29[];
+extern const unsigned char imagens_para_valores_instaveis_30[];
+extern const unsigned char imagens_para_valores_instaveis_31[];
+
+extern const int imagens_para_valores_estaveis_LEN;
+extern const int imagens_para_valores_instaveis_LEN;
+extern const unsigned char *imagens_para_valores_estaveis_allArray[4];
+extern const unsigned char *imagens_para_valores_instaveis_allArray[4];
+
 #endif // BITMAPS_H

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h> // Necessário para sqrt()
 #include "pico/stdlib.h"
 #include "hardware/adc.h"
@@ -38,12 +39,21 @@ static volatile bool calibracao_loading = false;
 static volatile bool calibracao_realizada = false;
 static volatile uint32_t last_button_time = 0;
 static volatile uint32_t last_calibration_time = 0;
+static volatile uint32_t last_running_time = 0;
+static volatile int contador_imagens_estaveis = 0;                  // Contador
+static volatile int contador_imagens_instaveis = 0;                 // Contador
 static volatile int Eletromiografia_calibrado = 0;                  // Valor médio calibrado do microfone
 static volatile int Sensor_de_Respiracao_calibrado = 0;             // Valor médio calibrado do joystick (eixo X)
 static volatile int Sensor_de_Qualidade_do_Ar_calibrado = 0;        // Valor médio calibrado do joystick (eixo Y)
 static volatile int Eletromiografia_calibrado_desvio = 0;           // Desvio  calibrado do microfone
 static volatile int Sensor_de_Respiracao_calibrado_desvio = 0;      // Desvio calibrado do joystick (eixo X)
 static volatile int Sensor_de_Qualidade_do_Ar_calibrado_desvio = 0; // Desvio médio calibrado do joystick (eixo Y)
+static volatile int estado_atual = 0;                               // 0 = indefinido, 1 = estável, 2 = instável
+static volatile int contador_confirmacao = 0;
+#define CONFIRMACAO_NECESSARIA 3 // Número de leituras consecutivas para confirmar mudança
+#define EMG_FATOR_DESVIO 1.0f
+#define RESP_FATOR_DESVIO 3.0f
+#define AR_FATOR_DESVIO 2.0f
 
 const uint32_t DEBOUNCE_DELAY = 200000;            // 200ms em microssegundos
 const uint32_t ANIMATION_UPDATE_INTERVAL = 400000; // 400ms em microssegundos
@@ -95,6 +105,9 @@ int main(void)
     ssd1306_init(&ssd, WIDTH, HEIGHT, false, endereco, I2C_PORT);
     ssd1306_config(&ssd);
     ssd1306_send_data(&ssd);
+
+    // Inicializa os LEDs
+    led_init();
 
     // Limpa o SSD1306 e exibe mensagem de "sem calibrar"
     ssd1306_fill(&ssd, false);
@@ -211,6 +224,9 @@ int main(void)
         // Exemplo de uso dos valores calibrados (fora do modo de calibração)
         if (calibracao_realizada)
         {
+
+            uint32_t current_calibration_sucessful_us;
+
             // Converte todas as leituras de uma vez
             DadosSensores dados = converter_leituras(
                 mic_value,   // EMG
@@ -238,7 +254,100 @@ int main(void)
             // printf("Estado: %s\n", dados.qualidade_ar.categoria);
             // printf("Recomendação: %s\n", dados.qualidade_ar.recomendacao);
 
-            printf("Mic: %d", mic_value);
+            bool emg_condicao = abs(Eletromiografia_calibrado - mic_value) <= Eletromiografia_calibrado_desvio * EMG_FATOR_DESVIO;
+            bool respiracao_condicao = abs(Sensor_de_Respiracao_calibrado - adc_value_x) <= Sensor_de_Respiracao_calibrado_desvio * RESP_FATOR_DESVIO;
+            bool qualidade_ar_condicao = abs(Sensor_de_Qualidade_do_Ar_calibrado - adc_value_y) <= Sensor_de_Qualidade_do_Ar_calibrado_desvio * AR_FATOR_DESVIO;
+            current_calibration_sucessful_us = to_us_since_boot(get_absolute_time());
+
+            if (current_calibration_sucessful_us - last_running_time >= ANIMATION_UPDATE_INTERVAL)
+            {
+                bool condicoes_estaveis = emg_condicao && respiracao_condicao && qualidade_ar_condicao;
+
+                // Criar buffers para as strings
+                char emg_str[10];
+                char resp_str[10];
+                char aqi_str[10];
+
+                // Formatar os valores
+                snprintf(emg_str, sizeof(emg_str), "%.1f%%", dados.tensao_muscular.nivel);
+                snprintf(resp_str, sizeof(resp_str), "%.1f", dados.respiracao.freq);
+                snprintf(aqi_str, sizeof(aqi_str), "%d", dados.qualidade_ar.aqi);
+
+                // Debug mais detalhado
+                printf("EMG: %d (%d vs %d), RESP: %d (%d vs %d), AR: %d (%d vs %d), Estado: %d, Cont_Conf: %d\n",
+                       emg_condicao, mic_value, Eletromiografia_calibrado,
+                       respiracao_condicao, adc_value_x, Sensor_de_Respiracao_calibrado,
+                       qualidade_ar_condicao, adc_value_y, Sensor_de_Qualidade_do_Ar_calibrado,
+                       estado_atual, contador_confirmacao);
+
+                // Nova lógica de transição de estado
+                if (condicoes_estaveis)
+                {
+                    if (estado_atual != 1)
+                    {
+                        contador_confirmacao++;
+                        if (contador_confirmacao >= CONFIRMACAO_NECESSARIA)
+                        {
+                            estado_atual = 1;
+                            contador_imagens_estaveis = 0;
+                            contador_imagens_instaveis = 0;
+                            contador_confirmacao = 0;
+                            printf("Transição para ESTÁVEL\n");
+                        }
+                    }
+                    else
+                    {
+                        contador_confirmacao = 0; // Reset se já estiver no estado correto
+                    }
+                }
+                else
+                {
+                    if (estado_atual != 2)
+                    {
+                        contador_confirmacao++;
+                        if (contador_confirmacao >= CONFIRMACAO_NECESSARIA)
+                        {
+                            estado_atual = 2;
+                            contador_imagens_estaveis = 0;
+                            contador_imagens_instaveis = 0;
+                            contador_confirmacao = 0;
+                            printf("Transição para INSTÁVEL\n");
+                        }
+                    }
+                    else
+                    {
+                        contador_confirmacao = 0; // Reset se já estiver no estado correto
+                    }
+                }
+
+                // Atualiza display baseado no estado atual
+                if (estado_atual == 1)
+                {
+                    ssd1306_fill(&ssd, false);
+                    ssd1306_send_data(&ssd);
+                    ssd1306_draw_bitmap(&ssd, 0, 0, imagens_para_valores_estaveis_allArray[contador_imagens_estaveis], 128, 64);
+                    ssd1306_draw_string(&ssd, emg_str, 3, 22);
+                    ssd1306_draw_string(&ssd, resp_str, 52, 22);
+                    ssd1306_draw_string(&ssd, aqi_str, 89, 22);
+                    ssd1306_send_data(&ssd);
+                    contador_imagens_estaveis = (contador_imagens_estaveis + 1) % 3;
+                }
+                else if (estado_atual == 2)
+                {
+                    ssd1306_fill(&ssd, false);
+                    ssd1306_send_data(&ssd);
+                    ssd1306_draw_bitmap(&ssd, 0, 0, imagens_para_valores_instaveis_allArray[contador_imagens_instaveis], 128, 64);
+                    ssd1306_draw_string(&ssd, emg_str, 3, 22);
+                    ssd1306_draw_string(&ssd, resp_str, 52, 22);
+                    ssd1306_draw_string(&ssd, aqi_str, 89, 22);
+                    ssd1306_send_data(&ssd);
+                    contador_imagens_instaveis = (contador_imagens_instaveis + 1) % 3;
+                }
+
+                last_running_time = current_calibration_sucessful_us;
+            }
+
+            // printf("Mic: %d", mic_value);
 
             // Para o microfone
             buzzer_control(Eletromiografia_calibrado, Eletromiografia_calibrado_desvio, mic_value, MICROFONE_PIN);
