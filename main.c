@@ -391,8 +391,7 @@ int main(void)
             buzzer_control(Sensor_de_Qualidade_do_Ar_calibrado, Sensor_de_Qualidade_do_Ar_calibrado_desvio, adc_value_y, VRY_PIN);
             sleep_us(125);
         }
-        
-        
+
         if (calibracao_realizada == true && jogo_da_cobra == true && calibracao_loading == false) // Implementação do jogo da cobrinha
         {
             static uint32_t last_update = 0;
@@ -489,7 +488,6 @@ static void gpio_irq_handle(uint gpio, uint32_t events)
                 calibracao_realizada = false;
                 npClear();
                 turn_off_leds();
-
             }
             else
             {
