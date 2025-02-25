@@ -44,10 +44,10 @@ static volatile uint32_t last_running_time = 0;
 static volatile int contador_imagens_estaveis = 0;                  // Contador
 static volatile int contador_imagens_instaveis = 0;                 // Contador
 static volatile int Eletromiografia_calibrado = 0;                  // Valor médio calibrado do microfone
-static volatile int Sensor_de_Respiracao_calibrado = 0;             // Valor médio calibrado do joystick (eixo X)
+static volatile int Sensor_de_Frequencia_Cardiaca_calibrado = 0;             // Valor médio calibrado do joystick (eixo X)
 static volatile int Sensor_de_Qualidade_do_Ar_calibrado = 0;        // Valor médio calibrado do joystick (eixo Y)
 static volatile int Eletromiografia_calibrado_desvio = 0;           // Desvio  calibrado do microfone
-static volatile int Sensor_de_Respiracao_calibrado_desvio = 0;      // Desvio calibrado do joystick (eixo X)
+static volatile int Sensor_de_Frequencia_Cardiaca_calibrado_desvio = 0;      // Desvio calibrado do joystick (eixo X)
 static volatile int Sensor_de_Qualidade_do_Ar_calibrado_desvio = 0; // Desvio médio calibrado do joystick (eixo Y)
 static volatile int estado_atual = 0;                               // 0 = indefinido, 1 = estável, 2 = instável
 static volatile int contador_confirmacao = 0;
@@ -56,7 +56,7 @@ static SnakeGame snake_game;
 
 #define CONFIRMACAO_NECESSARIA 3 // Número de leituras consecutivas para confirmar mudança
 #define EMG_FATOR_DESVIO 1.0f
-#define RESP_FATOR_DESVIO 3.0f
+#define CARDIACA_FATOR_DESVIO 3.0f
 #define AR_FATOR_DESVIO 2.0f
 
 const uint32_t DEBOUNCE_DELAY = 200000;            // 200ms em microssegundos
@@ -204,17 +204,17 @@ int main(void)
 
             // Cálculo da média (valores inteiros)
             Eletromiografia_calibrado = soma_mic / contador_calibracao;
-            Sensor_de_Respiracao_calibrado = soma_adc_x / contador_calibracao;
+            Sensor_de_Frequencia_Cardiaca_calibrado = soma_adc_x / contador_calibracao;
             Sensor_de_Qualidade_do_Ar_calibrado = soma_adc_y / contador_calibracao;
 
             // Cálculo da variância (usando divisão inteira)
             uint32_t var_mic = (soma_mic_sq / contador_calibracao) - ((uint64_t)Eletromiografia_calibrado * Eletromiografia_calibrado);
-            uint32_t var_adc_x = (soma_adc_x_sq / contador_calibracao) - ((uint64_t)Sensor_de_Respiracao_calibrado * Sensor_de_Respiracao_calibrado);
+            uint32_t var_adc_x = (soma_adc_x_sq / contador_calibracao) - ((uint64_t)Sensor_de_Frequencia_Cardiaca_calibrado * Sensor_de_Frequencia_Cardiaca_calibrado);
             uint32_t var_adc_y = (soma_adc_y_sq / contador_calibracao) - ((uint64_t)Sensor_de_Qualidade_do_Ar_calibrado * Sensor_de_Qualidade_do_Ar_calibrado);
 
             // Cálculo do desvio padrão (atualiza as variáveis globais)
             Eletromiografia_calibrado_desvio = (int)sqrt(var_mic);
-            Sensor_de_Respiracao_calibrado_desvio = (int)sqrt(var_adc_x);
+            Sensor_de_Frequencia_Cardiaca_calibrado_desvio = (int)sqrt(var_adc_x);
             Sensor_de_Qualidade_do_Ar_calibrado_desvio = (int)sqrt(var_adc_y);
 
             calibracao_realizada = true;
@@ -222,7 +222,7 @@ int main(void)
 
             // Exibe os resultados da calibração no terminal
             printf("Valor do mic calibrado: Média = %d, Desvio = %d\n", Eletromiografia_calibrado, Eletromiografia_calibrado_desvio);
-            printf("Valor da respiração calibrado: Média = %d, Desvio = %d\n", Sensor_de_Respiracao_calibrado, Sensor_de_Respiracao_calibrado_desvio);
+            printf("Valor da respiração calibrado: Média = %d, Desvio = %d\n", Sensor_de_Frequencia_Cardiaca_calibrado, Sensor_de_Frequencia_Cardiaca_calibrado_desvio);
             printf("Valor da qualidade do ar calibrado: Média = %d, Desvio = %d\n", Sensor_de_Qualidade_do_Ar_calibrado, Sensor_de_Qualidade_do_Ar_calibrado_desvio);
 
             sleep_us(ANIMATION_UPDATE_INTERVAL / 2);
@@ -247,10 +247,10 @@ int main(void)
                 adc_value_x, // Respiração
                 adc_value_y, // Qualidade do ar
                 Eletromiografia_calibrado,
-                Sensor_de_Respiracao_calibrado,
+                Sensor_de_Frequencia_Cardiaca_calibrado,
                 Sensor_de_Qualidade_do_Ar_calibrado,
                 Eletromiografia_calibrado_desvio,
-                Sensor_de_Respiracao_calibrado_desvio,
+                Sensor_de_Frequencia_Cardiaca_calibrado_desvio,
                 Sensor_de_Qualidade_do_Ar_calibrado_desvio);
 
             // printf("\nTensão Muscular:\n");
@@ -259,9 +259,9 @@ int main(void)
             // printf("Recomendação: %s\n", dados.tensao_muscular.recomendacao);
 
             // printf("\nRespiração:\n");
-            // printf("Frequência: %.1f resp/min\n", dados.respiracao.freq);
-            // printf("Estado: %s\n", dados.respiracao.categoria);
-            // printf("Recomendação: %s\n", dados.respiracao.recomendacao);
+            // printf("Frequência: %.1f resp/min\n", dados.cardiaca.freq);
+            // printf("Estado: %s\n", dados.cardiaca.categoria);
+            // printf("Recomendação: %s\n", dados.cardiaca.recomendacao);
 
             // printf("\nQualidade do Ar:\n");
             // printf("AQI: %d\n", dados.qualidade_ar.aqi);
@@ -269,7 +269,7 @@ int main(void)
             // printf("Recomendação: %s\n", dados.qualidade_ar.recomendacao);
 
             bool emg_condicao = abs(Eletromiografia_calibrado - mic_value) <= Eletromiografia_calibrado_desvio * EMG_FATOR_DESVIO;
-            bool respiracao_condicao = abs(Sensor_de_Respiracao_calibrado - adc_value_x) <= Sensor_de_Respiracao_calibrado_desvio * RESP_FATOR_DESVIO;
+            bool cardiaca_condicao = abs(Sensor_de_Frequencia_Cardiaca_calibrado - adc_value_x) <= Sensor_de_Frequencia_Cardiaca_calibrado_desvio * CARDIACA_FATOR_DESVIO;
             bool qualidade_ar_condicao = abs(Sensor_de_Qualidade_do_Ar_calibrado - adc_value_y) <= Sensor_de_Qualidade_do_Ar_calibrado_desvio * AR_FATOR_DESVIO;
             current_calibration_sucessful_us = to_us_since_boot(get_absolute_time());
 
@@ -282,7 +282,7 @@ int main(void)
                 { // Estado instável
                     // Calcula a média dos desvios normalizados
                     float desvio_emg = abs(Eletromiografia_calibrado - mic_value) / (float)Eletromiografia_calibrado_desvio;
-                    float desvio_resp = abs(Sensor_de_Respiracao_calibrado - adc_value_x) / (float)Sensor_de_Respiracao_calibrado_desvio;
+                    float desvio_resp = abs(Sensor_de_Frequencia_Cardiaca_calibrado - adc_value_x) / (float)Sensor_de_Frequencia_Cardiaca_calibrado_desvio;
                     float desvio_ar = abs(Sensor_de_Qualidade_do_Ar_calibrado - adc_value_y) / (float)Sensor_de_Qualidade_do_Ar_calibrado_desvio;
 
                     intensidade = (desvio_emg + desvio_resp + desvio_ar) / 3.0f;
@@ -291,7 +291,7 @@ int main(void)
                 // Atualiza os LEDs
                 update_leds(estado_atual, intensidade);
 
-                bool condicoes_estaveis = emg_condicao && respiracao_condicao && qualidade_ar_condicao;
+                bool condicoes_estaveis = emg_condicao && cardiaca_condicao && qualidade_ar_condicao;
 
                 // Criar buffers para as strings
                 char emg_str[10];
@@ -300,13 +300,13 @@ int main(void)
 
                 // Formatar os valores
                 snprintf(emg_str, sizeof(emg_str), "%.1f%%", dados.tensao_muscular.nivel);
-                snprintf(resp_str, sizeof(resp_str), "%.1f", dados.respiracao.freq);
+                snprintf(resp_str, sizeof(resp_str), "%.1f", dados.frequencia_cardiaca.bpm);
                 snprintf(aqi_str, sizeof(aqi_str), "%d", dados.qualidade_ar.aqi);
 
                 // Debug mais detalhado
                 printf("EMG: %d (%d vs %d), RESP: %d (%d vs %d), AR: %d (%d vs %d), Estado: %d, Cont_Conf: %d\n",
                        emg_condicao, mic_value, Eletromiografia_calibrado,
-                       respiracao_condicao, adc_value_x, Sensor_de_Respiracao_calibrado,
+                       cardiaca_condicao, adc_value_x, Sensor_de_Frequencia_Cardiaca_calibrado,
                        qualidade_ar_condicao, adc_value_y, Sensor_de_Qualidade_do_Ar_calibrado,
                        estado_atual, contador_confirmacao);
 
@@ -385,7 +385,7 @@ int main(void)
             buzzer_control(Eletromiografia_calibrado, Eletromiografia_calibrado_desvio, mic_value, MICROFONE_PIN);
 
             // Para o joystick X
-            buzzer_control(Sensor_de_Respiracao_calibrado, Sensor_de_Respiracao_calibrado_desvio, adc_value_x, VRX_PIN);
+            buzzer_control(Sensor_de_Frequencia_Cardiaca_calibrado, Sensor_de_Frequencia_Cardiaca_calibrado_desvio, adc_value_x, VRX_PIN);
 
             // Para o joystick Y
             buzzer_control(Sensor_de_Qualidade_do_Ar_calibrado, Sensor_de_Qualidade_do_Ar_calibrado_desvio, adc_value_y, VRY_PIN);

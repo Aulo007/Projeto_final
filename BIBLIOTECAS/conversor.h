@@ -10,12 +10,12 @@ typedef struct {
     const char* recomendacao; // Recomendação baseada no nível
 } TensaoMuscular;
 
-// Estrutura para dados da respiração
 typedef struct {
-    float freq;               // Frequência respiratória (resp/min)
-    const char* categoria;    // Categoria do padrão respiratório
-    const char* recomendacao; // Recomendação baseada no padrão
-} Respiracao;
+    float bpm;
+    const char* categoria;
+    const char* recomendacao;
+} FrequenciaCardiaca;
+
 
 // Estrutura para dados da qualidade do ar
 typedef struct {
@@ -27,7 +27,7 @@ typedef struct {
 // Estrutura para armazenar todas as leituras convertidas
 typedef struct {
     TensaoMuscular tensao_muscular;  // Dados da tensão muscular
-    Respiracao respiracao;           // Dados da respiração
+    FrequenciaCardiaca frequencia_cardiaca;           // Dados da respiração
     QualidadeAr qualidade_ar;        // Dados da qualidade do ar
 } DadosSensores;
 
@@ -45,7 +45,7 @@ DadosSensores converter_leituras(
 );
 
 TensaoMuscular converter_emg(uint16_t adc_value, int valor_calibrado, int zona_morta);
-Respiracao converter_respiracao(uint16_t adc_value_x, int valor_calibrado, int zona_morta);
+FrequenciaCardiaca converter_respiracao(uint16_t adc_value_x, int valor_calibrado, int zona_morta);
 QualidadeAr converter_qualidade_ar(uint16_t adc_value_y, int valor_calibrado, int zona_morta);
 
 #endif // CONVERSOR_H

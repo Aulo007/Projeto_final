@@ -84,67 +84,37 @@ TensaoMuscular converter_emg(uint16_t adc_value, int valor_calibrado, int zona_m
     return resultado;
 }
 
-Respiracao converter_respiracao(uint16_t adc_value_x, int valor_calibrado, int zona_morta)
+FrequenciaCardiaca converter_frequencia_cardiaca(uint16_t adc_value_x, int valor_calibrado, int zona_morta)
 {
-    Respiracao resultado;
+    FrequenciaCardiaca resultado;
+    
+    // Novo cálculo para frequência cardíaca (exemplo)
+    const float MIN_BPM = 40.0f;
+    const float MAX_BPM = 200.0f;
+    const float BPM_NORMAL_MIN = 60.0f;
+    const float BPM_NORMAL_MAX = 100.0f;
 
-    // Se estiver na zona morta, considera respiração normal
-    if (abs(adc_value_x - valor_calibrado) <= zona_morta)
-    {
-        resultado.freq = RESP_NORMAL_MIN;
+    if (abs(adc_value_x - valor_calibrado) <= zona_morta) {
+        resultado.bpm = 75.0f;  // Valor padrão
         resultado.categoria = "Normal";
-        resultado.recomendacao = "Padrão respiratório saudável";
+        resultado.recomendacao = "Frequência cardíaca normal";
         return resultado;
     }
 
-    // Calcula a frequência respiratória
-    float freq;
-    if (adc_value_x > valor_calibrado)
-    {
-        float variacao = (float)(adc_value_x - (valor_calibrado + zona_morta)) /
-                         (4096.0f - (valor_calibrado + zona_morta));
-        freq = RESP_NORMAL_MAX + (variacao * (RESP_MAX_RATE - RESP_NORMAL_MAX));
-    }
-    else
-    {
-        float variacao = (float)((valor_calibrado - zona_morta) - adc_value_x) /
-                         (valor_calibrado - zona_morta);
-        freq = RESP_NORMAL_MIN - (variacao * (RESP_NORMAL_MIN - RESP_MIN_RATE));
-    }
+    // Lógica de conversão adaptada para BPM
+    float variacao = (adc_value_x - valor_calibrado) / 4096.0f;
+    resultado.bpm = BPM_NORMAL_MIN + (variacao * (MAX_BPM - MIN_BPM));
 
-    // Limita os valores
-    if (freq < RESP_MIN_RATE)
-        freq = RESP_MIN_RATE;
-    if (freq > RESP_MAX_RATE)
-        freq = RESP_MAX_RATE;
-
-    resultado.freq = freq;
-
-    // Categoriza o padrão respiratório
-    if (freq < 12.0f)
-    {
-        resultado.categoria = "Bradipneia";
-        resultado.recomendacao = "Respiração muito lenta. Procure respirar mais naturalmente";
-    }
-    else if (freq >= 12.0f && freq <= 20.0f)
-    {
+    // Limites e categorização
+    if (resultado.bpm < 60) {
+        resultado.categoria = "Bradicardia";
+        resultado.recomendacao = "Frequência cardíaca muito baixa";
+    } else if (resultado.bpm > 100) {
+        resultado.categoria = "Taquicardia";
+        resultado.recomendacao = "Frequência cardíaca elevada";
+    } else {
         resultado.categoria = "Normal";
-        resultado.recomendacao = "Mantenha este ritmo saudável";
-    }
-    else if (freq > 20.0f && freq <= 24.0f)
-    {
-        resultado.categoria = "Taquipneia Leve";
-        resultado.recomendacao = "Respire mais devagar. Considere exercícios de respiração";
-    }
-    else if (freq > 24.0f && freq <= 27.0f)
-    {
-        resultado.categoria = "Taquipneia Moderada";
-        resultado.recomendacao = "Faça exercícios de respiração profunda e controlada";
-    }
-    else
-    {
-        resultado.categoria = "Taquipneia Grave";
-        resultado.recomendacao = "Respire mais devagar! Procure ajuda se persistir";
+        resultado.recomendacao = "Frequência cardíaca dentro da faixa saudável";
     }
 
     return resultado;
@@ -235,7 +205,7 @@ DadosSensores converter_leituras(
     DadosSensores dados;
 
     dados.tensao_muscular = converter_emg(emg_value, emg_calibrado, emg_desvio);
-    dados.respiracao = converter_respiracao(resp_value, resp_calibrado, resp_desvio);
+    dados.frequencia_cardiaca = converter_frequencia_cardiaca(resp_value, resp_calibrado, resp_desvio);
     dados.qualidade_ar = converter_qualidade_ar(ar_value, ar_calibrado, ar_desvio);
 
     return dados;

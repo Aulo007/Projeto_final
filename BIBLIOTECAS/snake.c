@@ -133,7 +133,7 @@ void snake_draw(SnakeGame *game)
     // Comida VERMELHA
     matriz[game->food.y][game->food.x][0] = 255; // Canal RED
 
-    setMatrizDeLEDSComIntensidade(matriz, 1.0, 1.0, 1.0);
+    setMatrizDeLEDSComIntensidade(matriz, 0.07,0.07, 0.07);
 }
 
 
