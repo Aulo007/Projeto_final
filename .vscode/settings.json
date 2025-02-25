@@ -15,7 +15,7 @@
     "cmake.automaticReconfigure": false,
     "cmake.configureOnOpen": false,
     "cmake.generator": "Ninja",
-    "cmake.cmakePath": "${userHome}/.pico-sdk/cmake/v3.29.9/bin/cmake",
+    "cmake.cmakePath": "C:\\Media\\Programas\\Cmake\\bin\\cmake.exe",
     "C_Cpp.debugShortcut": false,
     "terminal.integrated.env.windows": {
         "PICO_SDK_PATH": "${env:USERPROFILE}/.pico-sdk/sdk/2.1.0",
@@ -35,5 +35,11 @@
     "raspberry-pi-pico.cmakeAutoConfigure": true,
     "raspberry-pi-pico.useCmakeTools": false,
     "raspberry-pi-pico.cmakePath": "${HOME}/.pico-sdk/cmake/v3.29.9/bin/cmake",
-    "raspberry-pi-pico.ninjaPath": "${HOME}/.pico-sdk/ninja/v1.12.1/ninja"
+    "raspberry-pi-pico.ninjaPath": "${HOME}/.pico-sdk/ninja/v1.12.1/ninja",
+    "files.associations": {
+        "ConversorHexadecimal_RGB.C": "cpp",
+        "i2c.h": "c",
+        "stdlib.h": "c",
+        "type_traits": "c"
+    }
 }
