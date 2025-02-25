@@ -67,7 +67,7 @@ git clone <URL_do_repositorio>
 - Certifique-se de que o caminho de importação corresponde à pasta onde o repositório foi clonado e clique em **Import**.
 - O VSCode criará automaticamente as pastas essenciais, como **.vscode** e **build**.
 
-**Pronto!** O ambiente está configurado e você já pode utilizar o projeto para desenvolver suas próprias animações.
+**Pronto!** O ambiente está configurado e você já pode utilizar o projeto.
 
 ## Estrutura do Repositório
 
@@ -85,5 +85,5 @@ Este projeto está licenciado sob a Licença MIT – consulte o arquivo **LICENS
 
 ## Aviso ao Avaliador
 
-Se houver dúvidas ou sugestões sobre o projeto, sinta-se à vontade para entrar em contato conosco. Estamos à disposição para esclarecer quaisquer pontos e receber feedback.
+Se houver dúvidas ou sugestões sobre o projeto, sinta-se à vontade para entrar em contato.
 
