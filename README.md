@@ -52,9 +52,38 @@ O firmware do sistema está estruturado em três camadas principais:
 - **IDE**: VSCode com a extensão Pico
 - **Principais Bibliotecas**: Bibliotecas de controle de hardware para ADC, I2C, GPIO e PWM
 
----
 
 ## Instruções de Uso
 Clone o repositório para a pasta desejada:
-```bash
+bash
+```
 git clone <URL_do_repositorio>
+```
+
+## Instruções de Uso
+
+- Abra o projeto no VSCode e aguarde o carregamento das extensões.
+- Quando solicitado, clique em **Yes** para importar o projeto.
+- Certifique-se de que o caminho de importação corresponde à pasta onde o repositório foi clonado e clique em **Import**.
+- O VSCode criará automaticamente as pastas essenciais, como **.vscode** e **build**.
+
+**Pronto!** O ambiente está configurado e você já pode utilizar o projeto para desenvolver suas próprias animações.
+
+## Estrutura do Repositório
+
+- **main**: Versão estável e funcional do programa.
+- **develop**: Branch de integração de novas funcionalidades.
+- **README.md**: Documentação do projeto.
+
+## Testes
+
+Todas as funcionalidades foram rigorosamente testadas para garantir precisão e estabilidade. O programa passou por validações integradas para assegurar o correto funcionamento de cada componente.
+
+## Licença
+
+Este projeto está licenciado sob a Licença MIT – consulte o arquivo **LICENSE** para mais detalhes.
+
+## Aviso ao Avaliador
+
+Se houver dúvidas ou sugestões sobre o projeto, sinta-se à vontade para entrar em contato conosco. Estamos à disposição para esclarecer quaisquer pontos e receber feedback.
+
