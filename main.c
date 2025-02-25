@@ -41,15 +41,15 @@ static volatile bool calibracao_realizada = false;
 static volatile uint32_t last_button_time = 0;
 static volatile uint32_t last_calibration_time = 0;
 static volatile uint32_t last_running_time = 0;
-static volatile int contador_imagens_estaveis = 0;                  // Contador
-static volatile int contador_imagens_instaveis = 0;                 // Contador
-static volatile int Eletromiografia_calibrado = 0;                  // Valor médio calibrado do microfone
-static volatile int Sensor_de_Frequencia_Cardiaca_calibrado = 0;             // Valor médio calibrado do joystick (eixo X)
-static volatile int Sensor_de_Qualidade_do_Ar_calibrado = 0;        // Valor médio calibrado do joystick (eixo Y)
-static volatile int Eletromiografia_calibrado_desvio = 0;           // Desvio  calibrado do microfone
-static volatile int Sensor_de_Frequencia_Cardiaca_calibrado_desvio = 0;      // Desvio calibrado do joystick (eixo X)
-static volatile int Sensor_de_Qualidade_do_Ar_calibrado_desvio = 0; // Desvio médio calibrado do joystick (eixo Y)
-static volatile int estado_atual = 0;                               // 0 = indefinido, 1 = estável, 2 = instável
+static volatile int contador_imagens_estaveis = 0;                      // Contador
+static volatile int contador_imagens_instaveis = 0;                     // Contador
+static volatile int Eletromiografia_calibrado = 0;                      // Valor médio calibrado do microfone
+static volatile int Sensor_de_Frequencia_Cardiaca_calibrado = 0;        // Valor médio calibrado do joystick (eixo X)
+static volatile int Sensor_de_Qualidade_do_Ar_calibrado = 0;            // Valor médio calibrado do joystick (eixo Y)
+static volatile int Eletromiografia_calibrado_desvio = 0;               // Desvio  calibrado do microfone
+static volatile int Sensor_de_Frequencia_Cardiaca_calibrado_desvio = 0; // Desvio calibrado do joystick (eixo X)
+static volatile int Sensor_de_Qualidade_do_Ar_calibrado_desvio = 0;     // Desvio médio calibrado do joystick (eixo Y)
+static volatile int estado_atual = 0;                                   // 0 = indefinido, 1 = estável, 2 = instável
 static volatile int contador_confirmacao = 0;
 static volatile bool jogo_da_cobra = false;
 static SnakeGame snake_game;
@@ -253,20 +253,20 @@ int main(void)
                 Sensor_de_Frequencia_Cardiaca_calibrado_desvio,
                 Sensor_de_Qualidade_do_Ar_calibrado_desvio);
 
-            // printf("\nTensão Muscular:\n");
-            // printf("Nível: %.1f%%\n", dados.tensao_muscular.nivel);
-            // printf("Estado: %s\n", dados.tensao_muscular.categoria);
-            // printf("Recomendação: %s\n", dados.tensao_muscular.recomendacao);
+            printf("\nTensão Muscular:\n");
+            printf("Nível: %.1f%%\n", dados.tensao_muscular.nivel);
+            printf("Estado: %s\n", dados.tensao_muscular.categoria);
+            printf("Recomendação: %s\n", dados.tensao_muscular.recomendacao);
 
-            // printf("\nRespiração:\n");
-            // printf("Frequência: %.1f resp/min\n", dados.cardiaca.freq);
-            // printf("Estado: %s\n", dados.cardiaca.categoria);
-            // printf("Recomendação: %s\n", dados.cardiaca.recomendacao);
+            printf("\nFrquencia cardiáca:\n");
+            printf("Frequência: %.1f resp/min\n", dados.frequencia_cardiaca.bpm);
+            printf("Estado: %s\n", dados.frequencia_cardiaca.categoria);
+            printf("Recomendação: %s\n", dados.frequencia_cardiaca.recomendacao);
 
-            // printf("\nQualidade do Ar:\n");
-            // printf("AQI: %d\n", dados.qualidade_ar.aqi);
-            // printf("Estado: %s\n", dados.qualidade_ar.categoria);
-            // printf("Recomendação: %s\n", dados.qualidade_ar.recomendacao);
+            printf("\nQualidade do Ar:\n");
+            printf("AQI: %d\n", dados.qualidade_ar.aqi);
+            printf("Estado: %s\n", dados.qualidade_ar.categoria);
+            printf("Recomendação: %s\n", dados.qualidade_ar.recomendacao);
 
             bool emg_condicao = abs(Eletromiografia_calibrado - mic_value) <= Eletromiografia_calibrado_desvio * EMG_FATOR_DESVIO;
             bool cardiaca_condicao = abs(Sensor_de_Frequencia_Cardiaca_calibrado - adc_value_x) <= Sensor_de_Frequencia_Cardiaca_calibrado_desvio * CARDIACA_FATOR_DESVIO;
