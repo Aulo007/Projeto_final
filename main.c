@@ -267,7 +267,7 @@ int main(void)
                 printf("Recomendação: %s\n", dados.tensao_muscular.recomendacao);
 
                 printf("\nFrquencia cardiáca:\n");
-                printf("Frequência: %.1f resp/min\n", dados.frequencia_cardiaca.bpm);
+                printf("Frequência: %.1f bpm\n", dados.frequencia_cardiaca.bpm);
                 printf("Estado: %s\n", dados.frequencia_cardiaca.categoria);
                 printf("Recomendação: %s\n", dados.frequencia_cardiaca.recomendacao);
 

@@ -40,6 +40,7 @@
         "ConversorHexadecimal_RGB.C": "cpp",
         "i2c.h": "c",
         "stdlib.h": "c",
-        "type_traits": "c"
+        "type_traits": "c",
+        "ssd1306.h": "c"
     }
 }
