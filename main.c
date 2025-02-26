@@ -221,9 +221,9 @@ int main(void)
             calibracao_loading = false; // Finaliza a calibração para não repetir
 
             // Exibe os resultados da calibração no terminal
-            printf("Valor do mic calibrado: Média = %d, Desvio = %d\n", Eletromiografia_calibrado, Eletromiografia_calibrado_desvio);
-            printf("Valor da respiração calibrado: Média = %d, Desvio = %d\n", Sensor_de_Frequencia_Cardiaca_calibrado, Sensor_de_Frequencia_Cardiaca_calibrado_desvio);
-            printf("Valor da qualidade do ar calibrado: Média = %d, Desvio = %d\n", Sensor_de_Qualidade_do_Ar_calibrado, Sensor_de_Qualidade_do_Ar_calibrado_desvio);
+            // printf("Valor do mic calibrado: Média = %d, Desvio = %d\n", Eletromiografia_calibrado, Eletromiografia_calibrado_desvio);
+            // printf("Valor da respiração calibrado: Média = %d, Desvio = %d\n", Sensor_de_Frequencia_Cardiaca_calibrado, Sensor_de_Frequencia_Cardiaca_calibrado_desvio);
+            // printf("Valor da qualidade do ar calibrado: Média = %d, Desvio = %d\n", Sensor_de_Qualidade_do_Ar_calibrado, Sensor_de_Qualidade_do_Ar_calibrado_desvio);
 
             sleep_us(ANIMATION_UPDATE_INTERVAL / 2);
 
@@ -253,21 +253,6 @@ int main(void)
                 Sensor_de_Frequencia_Cardiaca_calibrado_desvio,
                 Sensor_de_Qualidade_do_Ar_calibrado_desvio);
 
-            printf("\nTensão Muscular:\n");
-            printf("Nível: %.1f%%\n", dados.tensao_muscular.nivel);
-            printf("Estado: %s\n", dados.tensao_muscular.categoria);
-            printf("Recomendação: %s\n", dados.tensao_muscular.recomendacao);
-
-            printf("\nFrquencia cardiáca:\n");
-            printf("Frequência: %.1f resp/min\n", dados.frequencia_cardiaca.bpm);
-            printf("Estado: %s\n", dados.frequencia_cardiaca.categoria);
-            printf("Recomendação: %s\n", dados.frequencia_cardiaca.recomendacao);
-
-            printf("\nQualidade do Ar:\n");
-            printf("AQI: %d\n", dados.qualidade_ar.aqi);
-            printf("Estado: %s\n", dados.qualidade_ar.categoria);
-            printf("Recomendação: %s\n", dados.qualidade_ar.recomendacao);
-
             bool emg_condicao = abs(Eletromiografia_calibrado - mic_value) <= Eletromiografia_calibrado_desvio * EMG_FATOR_DESVIO;
             bool cardiaca_condicao = abs(Sensor_de_Frequencia_Cardiaca_calibrado - adc_value_x) <= Sensor_de_Frequencia_Cardiaca_calibrado_desvio * CARDIACA_FATOR_DESVIO;
             bool qualidade_ar_condicao = abs(Sensor_de_Qualidade_do_Ar_calibrado - adc_value_y) <= Sensor_de_Qualidade_do_Ar_calibrado_desvio * AR_FATOR_DESVIO;
@@ -275,6 +260,21 @@ int main(void)
 
             if (current_calibration_sucessful_us - last_running_time >= ANIMATION_UPDATE_INTERVAL)
             {
+
+                printf("\nTensão Muscular:\n");
+                printf("Nível: %.1f%%\n", dados.tensao_muscular.nivel);
+                printf("Estado: %s\n", dados.tensao_muscular.categoria);
+                printf("Recomendação: %s\n", dados.tensao_muscular.recomendacao);
+
+                printf("\nFrquencia cardiáca:\n");
+                printf("Frequência: %.1f resp/min\n", dados.frequencia_cardiaca.bpm);
+                printf("Estado: %s\n", dados.frequencia_cardiaca.categoria);
+                printf("Recomendação: %s\n", dados.frequencia_cardiaca.recomendacao);
+
+                printf("\nQualidade do Ar:\n");
+                printf("AQI: %d\n", dados.qualidade_ar.aqi);
+                printf("Estado: %s\n", dados.qualidade_ar.categoria);
+                printf("Recomendação: %s\n", dados.qualidade_ar.recomendacao);
 
                 // Calcula a intensidade baseada nos desvios dos sensores
                 float intensidade = 0.0f;
@@ -304,11 +304,11 @@ int main(void)
                 snprintf(aqi_str, sizeof(aqi_str), "%d", dados.qualidade_ar.aqi);
 
                 // Debug mais detalhado
-                printf("EMG: %d (%d vs %d), RESP: %d (%d vs %d), AR: %d (%d vs %d), Estado: %d, Cont_Conf: %d\n",
-                       emg_condicao, mic_value, Eletromiografia_calibrado,
-                       cardiaca_condicao, adc_value_x, Sensor_de_Frequencia_Cardiaca_calibrado,
-                       qualidade_ar_condicao, adc_value_y, Sensor_de_Qualidade_do_Ar_calibrado,
-                       estado_atual, contador_confirmacao);
+                // // printf("EMG: %d (%d vs %d), RESP: %d (%d vs %d), AR: %d (%d vs %d), Estado: %d, Cont_Conf: %d\n",
+                //        emg_condicao, mic_value, Eletromiografia_calibrado,
+                //        cardiaca_condicao, adc_value_x, Sensor_de_Frequencia_Cardiaca_calibrado,
+                //        qualidade_ar_condicao, adc_value_y, Sensor_de_Qualidade_do_Ar_calibrado,
+                //        estado_atual, contador_confirmacao);
 
                 // Nova lógica de transição de estado
                 if (condicoes_estaveis)
@@ -322,7 +322,7 @@ int main(void)
                             contador_imagens_estaveis = 0;
                             contador_imagens_instaveis = 0;
                             contador_confirmacao = 0;
-                            printf("Transição para ESTÁVEL\n");
+                            // printf("Transição para ESTÁVEL\n");
                         }
                     }
                     else
@@ -341,7 +341,7 @@ int main(void)
                             contador_imagens_estaveis = 0;
                             contador_imagens_instaveis = 0;
                             contador_confirmacao = 0;
-                            printf("Transição para INSTÁVEL\n");
+                            // printf("Transição para INSTÁVEL\n");
                         }
                     }
                     else
